@@ -23,6 +23,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.Gson;
+import com.ift604.udes.myspot.Entites.Territories;
 import com.ift604.udes.myspot.Entites.Territory;
 
 import org.json.JSONObject;
@@ -103,13 +104,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         String url = "http://httpbin.org/html";
 
         // Request a string response
-        JsonObjectRequest stringRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
-            public void onResponse(JSONObject response) {
+            public void onResponse(String response) {
                 // Result handling
                 Gson gson = new Gson();
-                Object territories = gson.fromJson(response.toString(), Object.class);
-
+                Territories territories = gson.fromJson(response, Territories.class);
+                showTerritories(territories);
             }
         }, new Response.ErrorListener() {
             @Override
@@ -122,8 +123,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Volley.newRequestQueue(this).add(stringRequest);
     }
 
-    private void gettingTerritories(List<Territory> territories) {
+    private void showTerritories(Territories territories) {
+        for(Territory territory : territories){
 
+        }
     }
 
     private void gettingNearTerritoriesError(VolleyError error) {
