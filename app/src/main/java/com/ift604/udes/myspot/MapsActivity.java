@@ -2,6 +2,9 @@ package com.ift604.udes.myspot;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -10,25 +13,27 @@ import android.support.v4.content.ContextCompat;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.Gson;
-import com.ift604.udes.myspot.Entites.Territories;
+import com.google.gson.reflect.TypeToken;
 import com.ift604.udes.myspot.Entites.Territory;
+import com.ift604.udes.myspot.Utility.Delayer;
 
-import org.json.JSONObject;
-
+import java.lang.reflect.Type;
 import java.util.List;
+
+import static java.security.AccessController.getContext;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -58,13 +63,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         myMap = googleMap;
-        askForFineLocation();
-        fetchNearTerritories();
+
+        if(askForFineLocation()) {
+            Delayer.delay(1000, new Runnable() {
+                @Override
+                public void run() {
+                    setCamera();
+                    fetchNearTerritories();
+                }
+            });
+        }
     }
 
-    private void askForFineLocation() {
+    private void setCamera() {
+        CameraUpdate center = CameraUpdateFactory.newLatLng(new LatLng(45.38072, -71.92613));
+        CameraUpdate zoom = CameraUpdateFactory.zoomTo(15);
+        myMap.moveCamera(center);
+        myMap.animateCamera(zoom);
+    }
+
+    private boolean askForFineLocation() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             myMap.setMyLocationEnabled(true);
+            return true;
         } else {
             // Should we show an explanation?
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
@@ -80,6 +101,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
         }
+
+        return false;
     }
 
     @Override
@@ -90,6 +113,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 try {
                     myMap.setMyLocationEnabled(true);
+
+                    setCamera();
                     fetchNearTerritories();
                 } catch (SecurityException e) {
                     // Permission was denied. Display an error message.
@@ -101,7 +126,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void fetchNearTerritories() {
-        String url = "http://httpbin.org/html";
+        String url = "http://192.168.1.100:8080/getTerritories";
 
         // Request a string response
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
@@ -109,7 +134,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onResponse(String response) {
                 // Result handling
                 Gson gson = new Gson();
-                Territories territories = gson.fromJson(response, Territories.class);
+                Type listType = new TypeToken<List<Territory>>(){}.getType();
+                List<Territory> territories = gson.fromJson(response, listType);
                 showTerritories(territories);
             }
         }, new Response.ErrorListener() {
@@ -123,9 +149,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Volley.newRequestQueue(this).add(stringRequest);
     }
 
-    private void showTerritories(Territories territories) {
+    private void showTerritories(List<Territory> territories) {
         for(Territory territory : territories){
+            PolygonOptions polygonOptions = new PolygonOptions();
+            polygonOptions.addAll(territory.getPositions());
+            polygonOptions.strokeColor(Color.BLACK);
+            polygonOptions.strokeWidth(5.0f);
+            polygonOptions.fillColor(Color.argb(30, 0, 200, 0));
 
+            Polygon polygon = myMap.addPolygon(polygonOptions);
         }
     }
 
