@@ -22,7 +22,7 @@ public class Territory implements Serializable {
 
     private String name;
 
-    private List<Mark> marks;
+    private List<Marking> markings;
 
     public Territory() {
         this(new ArrayList<LatLng>());
@@ -30,7 +30,7 @@ public class Territory implements Serializable {
 
     public Territory(List<LatLng> positions) {
         this.positions = positions;
-        marks = new ArrayList<>();
+        markings = new ArrayList<>();
     }
 
     public Territory(long id, TerritoryType territoryType, List<LatLng> positions) {
@@ -83,11 +83,11 @@ public class Territory implements Serializable {
         this.name = name;
     }
 
-    public List<Mark> getMarks() {
-        return marks;
+    public List<Marking> getMarkings() {
+        return markings;
     }
 
-    public void setMarks(List<Mark> marks) {
-        this.marks = marks;
+    public void setMarkings(List<Marking> markings) {
+        this.markings = markings;
     }
 }
