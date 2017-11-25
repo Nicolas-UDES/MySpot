@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    buildToolsVersion "26.0.2"
     defaultConfig {
         applicationId "com.ift604.udes.myspot"
         minSdkVersion 24
@@ -33,4 +33,8 @@ dependencies {
     compile 'com.android.volley:volley:1.0.0'
     compile 'com.google.code.gson:gson:2.2.4'
     testCompile 'junit:junit:4.12'
+    compile 'com.google.firebase:firebase-core:11.0.4'                        // this line must be included to integrate with Firebase
+    compile 'com.google.firebase:firebase-messaging:11.0.4'
 }
+
+apply plugin: 'com.google.gms.google-services'

@@ -12,16 +12,17 @@ import java.util.TimerTask;
 
 public class Delayer {
 
-    public static void delay(int time, final Runnable run) {
-        new Timer().schedule(
+    public static Timer delay(int time, final Runnable run) {
+        Timer timer = new Timer();
+        timer.schedule(
                 new TimerTask() {
                     @Override
                     public void run() {
                         new Handler(Looper.getMainLooper()).post(run);
-
                     }
                 },
                 time
         );
+        return timer;
     }
 }

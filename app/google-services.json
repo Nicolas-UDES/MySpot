@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "903882786146",
+    "firebase_url": "https://myspot-3239c.firebaseio.com",
+    "project_id": "myspot-3239c",
+    "storage_bucket": "myspot-3239c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:903882786146:android:7a9d7d01410e6e5f",
+        "android_client_info": {
+          "package_name": "com.ift604.udes.myspot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "903882786146-f49i2da7m26qqhqbmoceta6q083uki2i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC783L7abKSeeK1lQXbJoEaxlyu9TTOktY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
