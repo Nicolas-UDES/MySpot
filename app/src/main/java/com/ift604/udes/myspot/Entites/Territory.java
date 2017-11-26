@@ -1,10 +1,10 @@
 package com.ift604.udes.myspot.Entites;
 
-import com.google.android.gms.maps.model.LatLng;
 import com.ift604.udes.myspot.Entites.Enumerable.TerritoryType;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collector;
 
 /**
  * Created by Squirrel on 2017-11-20.
@@ -53,6 +53,14 @@ public class Territory implements Serializable {
 
     public List<LatLng> getPositions() {
         return positions;
+    }
+
+    public List<com.google.android.gms.maps.model.LatLng> getGooglePositions() {
+        List<com.google.android.gms.maps.model.LatLng> result = new ArrayList<>();
+        for(LatLng position : positions){
+            result.add(position.toGoogle());
+        }
+        return result;
     }
 
     public void setPositions(List<LatLng> positions) {

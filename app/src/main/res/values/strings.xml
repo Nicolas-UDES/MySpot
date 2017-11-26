@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">MySpot</string>
     <string name="title_activity_maps">Map</string>
+    <string name="stomach">Stomach</string>
+    <string name="blader">Blader</string>
+    <string name="strength">Strength</string>
 </resources>

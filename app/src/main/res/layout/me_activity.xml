@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="Background"
+        android:scaleType="centerCrop"
+        android:src="@drawable/paws_background" />
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical" android:layout_width="match_parent"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <TextView
@@ -18,7 +30,8 @@
         android:layout_height="wrap_content"
         android:paddingLeft="25dp"
         android:paddingRight="25dp"
-        android:text="Level 10" />
+        android:text="Level 10"
+        android:textAppearance="@style/TextAppearance.AppCompat" />
 
     <TableLayout
         android:layout_width="match_parent"
@@ -35,21 +48,24 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="Stomach" />
+                android:text="@string/stomach"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
 
             <TextView
                 android:id="@+id/textView6"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="Blader" />
+                android:text="@string/blader"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
 
             <TextView
                 android:id="@+id/textView5"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="Strength" />
+                android:text="@string/strength"
+                android:textAppearance="@style/TextAppearance.AppCompat" />
         </TableRow>
 
         <TableRow
@@ -90,3 +106,4 @@
     </TableLayout>
 
 </LinearLayout>
+</FrameLayout>

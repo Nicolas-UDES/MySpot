@@ -1,6 +1,7 @@
 package com.ift604.udes.myspot.Entites;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.orm.SugarRecord;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,8 +32,7 @@ public class Player {
         marks = new ArrayList<>();
     }
 
-
-    public Player(int id, String username, double blader, int urineStrength, LatLng lastPosition, Date lastSeen, double stomach, int level) {
+    public Player(int id, String username, double blader, double urineStrength, double stomach, int level, LatLng lastPosition, Date lastSeen) {
         this();
 
         this.id = id;
