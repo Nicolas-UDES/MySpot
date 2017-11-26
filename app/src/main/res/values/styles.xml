@@ -26,5 +26,19 @@
         <item name="android:minWidth">1dip</item>
         <item name="android:maxWidth">12dip</item>
     </style>
+    <style name="Widget.ProgressBar.VerticalBlue">
+        <item name="android:indeterminateOnly">false</item>
+        <item name="android:progressDrawable">@drawable/blue_vertical_progress_bar</item>
+        <item name="android:indeterminateDrawable">@android:drawable/progress_indeterminate_horizontal</item>
+        <item name="android:minWidth">1dip</item>
+        <item name="android:maxWidth">12dip</item>
+    </style>
+    <style name="Widget.ProgressBar.VerticalRed">
+        <item name="android:indeterminateOnly">false</item>
+        <item name="android:progressDrawable">@drawable/red_vertical_progress_bar</item>
+        <item name="android:indeterminateDrawable">@android:drawable/progress_indeterminate_horizontal</item>
+        <item name="android:minWidth">1dip</item>
+        <item name="android:maxWidth">12dip</item>
+    </style>
 
 </resources>

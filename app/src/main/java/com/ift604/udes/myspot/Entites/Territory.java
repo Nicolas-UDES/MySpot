@@ -1,10 +1,10 @@
 package com.ift604.udes.myspot.Entites;
 
-import com.google.android.gms.maps.model.LatLng;
 import com.ift604.udes.myspot.Entites.Enumerable.TerritoryType;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collector;
 
 /**
  * Created by Squirrel on 2017-11-20.
@@ -22,7 +22,7 @@ public class Territory implements Serializable {
 
     private String name;
 
-    private List<Mark> marks;
+    private List<Marking> markings;
 
     public Territory() {
         this(new ArrayList<LatLng>());
@@ -30,7 +30,7 @@ public class Territory implements Serializable {
 
     public Territory(List<LatLng> positions) {
         this.positions = positions;
-        marks = new ArrayList<>();
+        markings = new ArrayList<>();
     }
 
     public Territory(long id, TerritoryType territoryType, List<LatLng> positions) {
@@ -53,6 +53,14 @@ public class Territory implements Serializable {
 
     public List<LatLng> getPositions() {
         return positions;
+    }
+
+    public List<com.google.android.gms.maps.model.LatLng> getGooglePositions() {
+        List<com.google.android.gms.maps.model.LatLng> result = new ArrayList<>();
+        for(LatLng position : positions){
+            result.add(position.toGoogle());
+        }
+        return result;
     }
 
     public void setPositions(List<LatLng> positions) {
@@ -83,11 +91,11 @@ public class Territory implements Serializable {
         this.name = name;
     }
 
-    public List<Mark> getMarks() {
-        return marks;
+    public List<Marking> getMarkings() {
+        return markings;
     }
 
-    public void setMarks(List<Mark> marks) {
-        this.marks = marks;
+    public void setMarkings(List<Marking> markings) {
+        this.markings = markings;
     }
 }

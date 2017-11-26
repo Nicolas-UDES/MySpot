@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     tools:context="com.ift604.udes.myspot.Android.MapsActivity">
 
-    <Button android:id="@+id/googlemaps_select_location"
+    <Button android:id="@+id/me_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
