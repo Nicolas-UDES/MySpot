@@ -8,6 +8,8 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ift604.udes.myspot.Entites.Drinking;
+import com.ift604.udes.myspot.Entites.Player;
 import com.ift604.udes.myspot.Entites.Territory;
 
 import java.io.IOException;
@@ -17,37 +19,37 @@ import java.util.List;
  * Created by Squirrel on 2017-11-26.
  */
 
-public class TerritoryDAO {
+public class DrinkingDAO {
 
-    private static final String PATH = "territory/";
+    private static final String PATH = "drinking/";
 
-    public interface OnGetTerritories
+    public interface OnGetNonEmptyDrinkings
     {
-        void onGetTerritories(List<Territory> territories);
-        void errorOnGetTerritories(VolleyError error);
+        void onGetNonEmptyDrinkings(List<Drinking> player);
+        void errorOnGetNonEmptyDrinkings(VolleyError error);
     }
 
-    public static void getTerritories(final OnGetTerritories answer, Context context) {
-        final String path = Server.URL + PATH + "getAll";
+    public static void getNonEmptyDrinkings(final DrinkingDAO.OnGetNonEmptyDrinkings answer, Context context, int playerId) {
+        final String path = Server.URL + PATH + "getNonEmpty/" + playerId;
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, path, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
-                List<Territory> territories;
-
+                // Result handling
+                List<Drinking> drinkings;
                 try {
-                    territories = new ObjectMapper().readValue(response, new TypeReference<List<Territory>>(){});
+                    drinkings = new ObjectMapper().readValue(response, new TypeReference<List<Drinking>>(){});
                 } catch (IOException e) {
-                    answer.errorOnGetTerritories(new VolleyError());
+                    answer.errorOnGetNonEmptyDrinkings(new VolleyError());
                     return;
                 }
 
-                answer.onGetTerritories(territories);
+                answer.onGetNonEmptyDrinkings(drinkings);
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                answer.errorOnGetTerritories(error);
+                answer.errorOnGetNonEmptyDrinkings(error);
             }
         });
 
