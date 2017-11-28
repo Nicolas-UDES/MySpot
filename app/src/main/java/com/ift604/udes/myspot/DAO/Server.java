@@ -2,10 +2,14 @@ package com.ift604.udes.myspot.DAO;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.text.TextUtils;
+import android.util.Log;
 import android.util.LruCache;
 
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
 
@@ -64,5 +68,18 @@ public class Server {
 
     public ImageLoader getImageLoader() {
         return mImageLoader;
+    }
+
+    public static String toString(VolleyError error) {
+        NetworkResponse response = error.networkResponse;
+        if (response != null && response.data != null){
+            return "NetworkResponse: " + response.statusCode;
+        } else {
+            String errorMessage=error.getClass().getSimpleName();
+            if(!TextUtils.isEmpty(errorMessage)){
+                return "ErrorMessage: "+ errorMessage;
+            }
+            return "No clues.";
+        }
     }
 }

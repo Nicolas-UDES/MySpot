@@ -3,38 +3,32 @@ package com.ift604.udes.myspot.Android;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
+import android.database.sqlite.SQLiteException;
 import android.graphics.Color;
-import android.os.Handler;
-import android.os.Looper;
+import android.graphics.PorterDuff;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.media.MediaPlayer;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
-import android.text.TextUtils;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 
-import com.android.volley.NetworkResponse;
-import com.android.volley.Request;
-import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
-import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.ift604.udes.myspot.DAO.PlayerDAO;
+import com.ift604.udes.myspot.DAO.Server;
 import com.ift604.udes.myspot.DAO.TerritoryDAO;
 import com.ift604.udes.myspot.Entites.Enumerable.TerritoryType;
 import com.ift604.udes.myspot.Entites.LatLng;
@@ -42,17 +36,13 @@ import com.ift604.udes.myspot.Entites.Player;
 import com.ift604.udes.myspot.Entites.ServerId;
 import com.ift604.udes.myspot.Entites.Territory;
 import com.ift604.udes.myspot.R;
-import com.ift604.udes.myspot.Utility.Delayer;
+import com.ift604.udes.myspot.Utility.LatLngHelper;
 
-import java.lang.reflect.Type;
-import java.util.Dictionary;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import static java.security.AccessController.getContext;
-
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, TerritoryDAO.OnGetTerritories, PlayerDAO.OnCreatePlayer {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener, TerritoryDAO.OnGetTerritories, PlayerDAO.OnCreatePlayer {
 
     private static final int MY_LOCATION_REQUEST_CODE = 245;
     private static final String SAVED_TERRITORIES_KEY = "SAVED_TERRITORIES";
@@ -61,8 +51,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final int UNIVERSITY_ZOOM = 15;
 
     private HashMap<Territory, PolygonOptions> territories;
-    private GoogleMap myMap;
+    private String provider;
+    private Location firstPosition;
+    private Boolean modeMark;
 
+    private GoogleMap myMap;
+    private MediaPlayer player;
+    private LocationManager locationManager;
     private Bundle savedInstanceState;
 
     @Override
@@ -71,6 +66,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setContentView(R.layout.activity_maps);
         this.savedInstanceState = savedInstanceState;
 
+        locationManager = (LocationManager) getApplicationContext().getSystemService(LOCATION_SERVICE);
+        firstPosition = getLastKnownLocation();
+
+        //ServerId.clearServerId();
+        getServerId();
         setButtons();
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -78,10 +78,38 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
     }
 
+    private Location getLastKnownLocation() {
+        List<String> providers = locationManager.getProviders(true);
+        Location bestLocation = null;
+        String bestProvider = null;
+        for (String provider : providers) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                continue;
+            }
+
+            Location location = locationManager.getLastKnownLocation(provider);
+            if (location == null) {
+                continue;
+            }
+            if (bestLocation == null || location.getAccuracy() < bestLocation.getAccuracy()) {
+                bestLocation = location;
+                bestProvider = provider;
+            }
+        }
+
+        provider = bestProvider;
+        return bestLocation;
+    }
+
     private void getServerId() {
-        List<ServerId> serverIds = ServerId.listAll(ServerId.class);
-        if(serverIds.size() == 0) {
-            PlayerDAO.createPlayer(this, getApplicationContext(), "");
+        List<ServerId> serverIds = null;
+        try {
+            serverIds = ServerId.listAll(ServerId.class);
+        } catch (SQLiteException e) {
+        }
+
+        if (serverIds == null || serverIds.size() == 0) {
+            PlayerDAO.createPlayer(this, getApplicationContext(), "Steinsky");
         }
     }
 
@@ -92,6 +120,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 meButtonClick(v);
             }
         });
+
+        final Button peeButton = (Button) findViewById(R.id.pee_button);
+        peeButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    player.start();
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    player.stop();
+                    try {
+                        player.prepare();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                return false;
+            }
+        });
     }
 
     @Override
@@ -100,12 +146,39 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         setCamera();
         askForFineLocation();
-        if(territories != null){
+        if (territories != null) {
             showTerritories();
-        }
-        else {
+        } else {
             fetchNearTerritories();
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        locationManager.requestLocationUpdates(provider, 500, 1, this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        locationManager.removeUpdates(this);
+    }
+
+    public void loadDataFromAsset(String file, boolean loop) {
+        try {
+            AssetFileDescriptor afd = getAssets().openFd(file);
+            player = new MediaPlayer();
+            player.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            player.setLooping(loop);
+            player.prepare();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void setCamera() {
@@ -186,35 +259,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         startActivity(intent);
     }
 
+    public void peeButtonClick(View view) {
+        Intent intent = new Intent(this, MeActivity.class);
+        startActivity(intent);
+    }
+
     @Override
-    public void getTerritories(List<Territory> territories) {
+    public void onGetTerritories(List<Territory> territories) {
         this.territories = new HashMap<>();
         for(Territory territory : territories){
             PolygonOptions polygon = getPolygonOptions(territory);
             myMap.addPolygon(polygon);
             this.territories.put(territory, polygon);
         }
+
+        onLocationChanged(firstPosition);
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putSerializable(SAVED_TERRITORIES_KEY, this.territories);
-
-        // call superclass to save any view hierarchy
         super.onSaveInstanceState(outState);
     }
 
     @Override
     public void errorOnGetTerritories(VolleyError error) {
-        NetworkResponse response = error.networkResponse;
-        if(response != null && response.data != null){
-            Log.e("tag","errorMessage:"+response.statusCode);
-        }else{
-            String errorMessage=error.getClass().getSimpleName();
-            if(!TextUtils.isEmpty(errorMessage)){
-                Log.e("tag","errorMessage:"+errorMessage);
-            }
-        }
+        Log.e("errorOnGetTerritories", Server.toString(error));
     }
 
     @Override
@@ -224,6 +294,63 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void errorOnGetPlayer(VolleyError error) {
-
+        Log.e("errorOnGetPlayer", Server.toString(error));
     }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        final Button markButton = (Button) findViewById(R.id.pee_button);
+        boolean found = false;
+
+        if(location != null) {
+            LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+
+            for (Territory territory : territories.keySet()) {
+                if (!LatLngHelper.isPointInPolygon(latLng, territory.getPositions())) {
+                    continue;
+                }
+
+                found = true;
+                if (territory.getTerritoryType() == TerritoryType.Water) {
+                    if (modeMark == null || modeMark) {
+                        setModeDrink(markButton);
+                    }
+                } else if (modeMark == null || !modeMark) {
+                    setModeMark(markButton);
+                }
+                break;
+            }
+        }
+
+        if(!found && modeMark != null) {
+            markButton.setAlpha(0.0f);
+            modeMark = null;
+        }
+    }
+
+    private void setModeDrink(Button button) {
+        setMode(false, button, "Drink", "#b3c3ff", "Drinking.mp3", true);
+    }
+
+    private void setModeMark(Button button) {
+
+        setMode(true, button, "Mark", "#ffffb3", "Male urinating.mp3", false);
+    }
+
+    private void setMode(boolean modeMark, Button button, String text, String color, String audioFile, boolean loopAudio) {
+        this.modeMark = modeMark;
+        button.setText(text);
+        button.setAlpha(1.0f);
+        button.getBackground().setColorFilter(Color.parseColor(color), PorterDuff.Mode.MULTIPLY);
+        loadDataFromAsset(audioFile, loopAudio);
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) { }
+
+    @Override
+    public void onProviderEnabled(String provider) { }
+
+    @Override
+    public void onProviderDisabled(String provider) { }
 }

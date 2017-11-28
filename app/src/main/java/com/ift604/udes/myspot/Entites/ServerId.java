@@ -6,22 +6,39 @@ import com.orm.SugarRecord;
  * Created by Squirrel on 2017-11-26.
  */
 
-public class ServerId extends SugarRecord<ServerId> {
+public class ServerId extends SugarRecord {
 
-    private int serverId;
+    private int server;
 
     public ServerId() {
     }
 
     public ServerId(int serverId) {
-        this.serverId = serverId;
+        this.server = serverId;
     }
 
-    public int getServerId() {
-        return serverId;
+    public int getServer() {
+        return server;
     }
 
-    public void setServerId(int serverId) {
-        this.serverId = serverId;
+    public void setServer(int server) {
+        this.server = server;
+    }
+
+    public static Integer getServerId() {
+        try {
+            return ServerId.findAll(ServerId.class).next().getServer();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static boolean clearServerId() {
+        try {
+            ServerId.findAll(ServerId.class).next().delete();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
