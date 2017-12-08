@@ -14,18 +14,19 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.ift604.udes.myspot.DAO.DrinkingDAO;
 import com.ift604.udes.myspot.DAO.PlayerDAO;
 import com.ift604.udes.myspot.DAO.Server;
-import com.ift604.udes.myspot.Entites.Drinking;
-import com.ift604.udes.myspot.Entites.Player;
 import com.ift604.udes.myspot.Entites.ServerId;
 import com.ift604.udes.myspot.R;
-import com.ift604.udes.myspot.Utility.Functions;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static com.ift604.udes.myspot.Utility.Functions.levelToBladerSize;
+import MySpotLibrary.Entites.*;
+import MySpotLibrary.Entites.Player;
+
+import static MySpotLibrary.BLL.PlayerBLL.calculateLiquids;
+import static MySpotLibrary.BLL.PlayerBLL.levelToBladerSize;
+
 
 /**
  * Created by Squirrel on 2017-11-26.
@@ -91,7 +92,7 @@ public class MeActivity extends Activity implements PlayerDAO.OnGetPlayer, Drink
 
     private void updateLiquids() {
         double maxSize = levelToBladerSize(player.getLevel());
-        Functions.Liquids liquids = Functions.calculateLiquids(drinkings, player);
+        MySpotLibrary.BLL.PlayerBLL.Liquids liquids = calculateLiquids(drinkings, player);
 
         ProgressBar stomachView = (ProgressBar) findViewById(R.id.progressbarStomach);
         stomachView.setProgress((int) (Math.min(liquids.stomach, maxSize) * MULTI));

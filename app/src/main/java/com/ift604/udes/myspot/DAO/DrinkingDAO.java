@@ -8,12 +8,11 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ift604.udes.myspot.Entites.Drinking;
-import com.ift604.udes.myspot.Entites.Player;
-import com.ift604.udes.myspot.Entites.Territory;
 
 import java.io.IOException;
 import java.util.List;
+
+import MySpotLibrary.Entites.Drinking;
 
 /**
  * Created by Squirrel on 2017-11-26.
@@ -27,6 +26,12 @@ public class DrinkingDAO {
     {
         void onGetNonEmptyDrinkings(List<Drinking> player);
         void errorOnGetNonEmptyDrinkings(VolleyError error);
+    }
+
+    public interface OnSendDrinking
+    {
+        void onSendDrinking(Drinking drinking);
+        void errorOnSendDrinking(VolleyError error);
     }
 
     public static void getNonEmptyDrinkings(final DrinkingDAO.OnGetNonEmptyDrinkings answer, Context context, int playerId) {
@@ -50,6 +55,34 @@ public class DrinkingDAO {
             @Override
             public void onErrorResponse(VolleyError error) {
                 answer.errorOnGetNonEmptyDrinkings(error);
+            }
+        });
+
+        // Add the request to the queue
+        Server.getInstance(context).addToRequestQueue(stringRequest);
+    }
+
+    public static void sendDrinking(final DrinkingDAO.OnSendDrinking answer, Context context, int playerId, int territoryId, int amount) {
+        final String path = Server.URL + PATH + "getNonEmpty/" + playerId + "/" + territoryId + "/" + amount;
+
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, path, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                // Result handling
+                Drinking drinking;
+                try {
+                    drinking = new ObjectMapper().readValue(response, Drinking.class);
+                } catch (IOException e) {
+                    answer.errorOnSendDrinking(new VolleyError());
+                    return;
+                }
+
+                answer.onSendDrinking(drinking);
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                answer.errorOnSendDrinking(error);
             }
         });
 

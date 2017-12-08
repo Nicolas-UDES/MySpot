@@ -8,12 +8,12 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ift604.udes.myspot.Entites.Player;
-import com.ift604.udes.myspot.Entites.Territory;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
+
+import MySpotLibrary.Entites.Player;
 
 /**
  * Created by Squirrel on 2017-11-26.

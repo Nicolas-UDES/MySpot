@@ -26,23 +26,26 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.PolygonOptions;
+import com.google.android.gms.maps.model.*;
 import com.ift604.udes.myspot.DAO.PlayerDAO;
 import com.ift604.udes.myspot.DAO.Server;
 import com.ift604.udes.myspot.DAO.TerritoryDAO;
-import com.ift604.udes.myspot.Entites.Enumerable.TerritoryType;
-import com.ift604.udes.myspot.Entites.LatLng;
-import com.ift604.udes.myspot.Entites.Player;
 import com.ift604.udes.myspot.Entites.ServerId;
-import com.ift604.udes.myspot.Entites.Territory;
 import com.ift604.udes.myspot.R;
-import com.ift604.udes.myspot.Utility.LatLngHelper;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener, TerritoryDAO.OnGetTerritories, PlayerDAO.OnCreatePlayer {
+import MySpotLibrary.Entites.*;
+import MySpotLibrary.Entites.Enumerable.TerritoryType;
+import MySpotLibrary.Entites.LatLng;
+
+import static MySpotLibrary.BLL.LatLngBLL.isPointInPolygon;
+
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener, View.OnTouchListener, TerritoryDAO.OnGetTerritories, PlayerDAO.OnCreatePlayer {
 
     private static final int MY_LOCATION_REQUEST_CODE = 245;
     private static final String SAVED_TERRITORIES_KEY = "SAVED_TERRITORIES";
@@ -54,6 +57,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private String provider;
     private Location firstPosition;
     private Boolean modeMark;
+    private long actionBegining;
 
     private GoogleMap myMap;
     private MediaPlayer player;
@@ -69,7 +73,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         locationManager = (LocationManager) getApplicationContext().getSystemService(LOCATION_SERVICE);
         firstPosition = getLastKnownLocation();
 
-        //ServerId.clearServerId();
+        ServerId.clearServerId();
         getServerId();
         setButtons();
 
@@ -122,22 +126,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
 
         final Button peeButton = (Button) findViewById(R.id.pee_button);
-        peeButton.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    player.start();
-                } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    player.stop();
-                    try {
-                        player.prepare();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                return false;
-            }
-        });
+        peeButton.setOnTouchListener(this);
     }
 
     @Override
@@ -156,7 +145,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onResume() {
         super.onResume();
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                || provider == null) {
             return;
         }
         locationManager.requestLocationUpdates(provider, 500, 1, this);
@@ -181,8 +171,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    private List<com.google.android.gms.maps.model.LatLng> getGooglePositions(Iterable<LatLng> points) {
+        List<com.google.android.gms.maps.model.LatLng> result = new ArrayList<>();
+        for(LatLng position : points){
+            result.add(getGooglePosition(position));
+        }
+        return result;
+    }
+
+    private com.google.android.gms.maps.model.LatLng getGooglePosition(LatLng point) {
+        return new com.google.android.gms.maps.model.LatLng(point.getLatitude(), point.getLongitude());
+    }
+
     private void setCamera() {
-        CameraUpdate center = CameraUpdateFactory.newLatLngZoom(new LatLng(UNIVERSITY_LAT, UNIVERSITY_LNG).toGoogle(), UNIVERSITY_ZOOM);
+        CameraUpdate center = CameraUpdateFactory.newLatLngZoom(getGooglePosition(new LatLng(UNIVERSITY_LAT, UNIVERSITY_LNG)), UNIVERSITY_ZOOM);
         myMap.moveCamera(center);
     }
 
@@ -234,7 +236,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private PolygonOptions getPolygonOptions(Territory territory) {
         PolygonOptions polygonOptions = new PolygonOptions();
-        polygonOptions.addAll(territory.getGooglePositions());
+        polygonOptions.addAll(getGooglePositions(territory.getPositions()));
         polygonOptions.strokeColor(Color.BLACK);
         polygonOptions.strokeWidth(5.0f);
         polygonOptions.fillColor(getColor(territory.getTerritoryType()));
@@ -306,7 +308,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
 
             for (Territory territory : territories.keySet()) {
-                if (!LatLngHelper.isPointInPolygon(latLng, territory.getPositions())) {
+                if (!isPointInPolygon(latLng, territory.getPositions())) {
                     continue;
                 }
 
@@ -353,4 +355,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onProviderDisabled(String provider) { }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            actionBegining = new Date().getTime();
+            player.start();
+        } else if (event.getAction() == MotionEvent.ACTION_UP) {
+            long delay = new Date().getTime() - actionBegining;
+            player.stop();
+            try {
+                player.prepare();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            applyAction(delay);
+        }
+        return false;
+    }
+
+    private void applyAction(long delay) {
+
+    }
 }
