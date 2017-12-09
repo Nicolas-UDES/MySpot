@@ -35,7 +35,7 @@ public class PlayerDAO {
         void errorOnGetPlayer(VolleyError error);
     }
 
-    public static void getPlayer(final PlayerDAO.OnGetPlayer answer, Context context, int playerId) {
+    public static void getPlayer(final PlayerDAO.OnGetPlayer answer, Context context, long playerId) {
         final String path = Server.URL + PATH + "get/" + playerId;
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, path, new Response.Listener<String>() {
