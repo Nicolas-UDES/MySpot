@@ -8,16 +8,16 @@ import com.orm.SugarRecord;
 
 public class ServerId extends SugarRecord {
 
-    private int server;
+    private long server;
 
     public ServerId() {
     }
 
-    public ServerId(int serverId) {
+    public ServerId(long serverId) {
         this.server = serverId;
     }
 
-    public int getServer() {
+    public long getServer() {
         return server;
     }
 
@@ -25,7 +25,7 @@ public class ServerId extends SugarRecord {
         this.server = server;
     }
 
-    public static Integer getServerId() {
+    public static Long getServerId() {
         try {
             return ServerId.findAll(ServerId.class).next().getServer();
         } catch (Exception e) {

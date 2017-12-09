@@ -1,6 +1,7 @@
 package com.ift604.udes.myspot.Android;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
@@ -19,6 +20,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.android.volley.VolleyError;
 import com.google.android.gms.maps.CameraUpdate;
@@ -27,6 +29,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.*;
+import com.ift604.udes.myspot.DAO.DrinkingDAO;
 import com.ift604.udes.myspot.DAO.PlayerDAO;
 import com.ift604.udes.myspot.DAO.Server;
 import com.ift604.udes.myspot.DAO.TerritoryDAO;
@@ -39,13 +42,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import MySpotLibrary.BLL.PlayerBLL;
 import MySpotLibrary.Entites.*;
 import MySpotLibrary.Entites.Enumerable.TerritoryType;
-import MySpotLibrary.Entites.LatLng;
 
-import static MySpotLibrary.BLL.LatLngBLL.isPointInPolygon;
+import static MySpotLibrary.BLL.GeoPosBLL.isPointInPolygon;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener, View.OnTouchListener, TerritoryDAO.OnGetTerritories, PlayerDAO.OnCreatePlayer {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener, View.OnTouchListener, TerritoryDAO.OnGetTerritories, PlayerDAO.OnCreatePlayer, DrinkingDAO.OnSendDrinking {
 
     private static final int MY_LOCATION_REQUEST_CODE = 245;
     private static final String SAVED_TERRITORIES_KEY = "SAVED_TERRITORIES";
@@ -56,7 +59,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private HashMap<Territory, PolygonOptions> territories;
     private String provider;
     private Location firstPosition;
-    private Boolean modeMark;
+    private Territory currentTerritory;
     private long actionBegining;
 
     private GoogleMap myMap;
@@ -171,20 +174,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    private List<com.google.android.gms.maps.model.LatLng> getGooglePositions(Iterable<LatLng> points) {
+    private List<com.google.android.gms.maps.model.LatLng> getGooglePositions(Iterable<GeoPos> points) {
         List<com.google.android.gms.maps.model.LatLng> result = new ArrayList<>();
-        for(LatLng position : points){
+        for(GeoPos position : points){
             result.add(getGooglePosition(position));
         }
         return result;
     }
 
-    private com.google.android.gms.maps.model.LatLng getGooglePosition(LatLng point) {
+    private com.google.android.gms.maps.model.LatLng getGooglePosition(GeoPos point) {
         return new com.google.android.gms.maps.model.LatLng(point.getLatitude(), point.getLongitude());
     }
 
     private void setCamera() {
-        CameraUpdate center = CameraUpdateFactory.newLatLngZoom(getGooglePosition(new LatLng(UNIVERSITY_LAT, UNIVERSITY_LNG)), UNIVERSITY_ZOOM);
+        CameraUpdate center = CameraUpdateFactory.newLatLngZoom(getGooglePosition(new GeoPos(UNIVERSITY_LAT, UNIVERSITY_LNG)), UNIVERSITY_ZOOM);
         myMap.moveCamera(center);
     }
 
@@ -305,7 +308,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         boolean found = false;
 
         if(location != null) {
-            LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+            GeoPos latLng = new GeoPos(location.getLatitude(), location.getLongitude());
 
             for (Territory territory : territories.keySet()) {
                 if (!isPointInPolygon(latLng, territory.getPositions())) {
@@ -314,33 +317,34 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 found = true;
                 if (territory.getTerritoryType() == TerritoryType.Water) {
-                    if (modeMark == null || modeMark) {
+                    if (currentTerritory == null || currentTerritory.getTerritoryType() == TerritoryType.Gainable) {
                         setModeDrink(markButton);
                     }
-                } else if (modeMark == null || !modeMark) {
+                } else if (currentTerritory == null || currentTerritory.getTerritoryType() == TerritoryType.Water) {
                     setModeMark(markButton);
                 }
+
+                currentTerritory = territory;
                 break;
             }
         }
 
-        if(!found && modeMark != null) {
+        if(!found && currentTerritory != null) {
             markButton.setAlpha(0.0f);
-            modeMark = null;
+            currentTerritory = null;
         }
     }
 
     private void setModeDrink(Button button) {
-        setMode(false, button, "Drink", "#b3c3ff", "Drinking.mp3", true);
+        setMode(button, "Drink", "#b3c3ff", "Drinking.mp3", true);
     }
 
     private void setModeMark(Button button) {
 
-        setMode(true, button, "Mark", "#ffffb3", "Male urinating.mp3", false);
+        setMode(button, "Mark", "#ffffb3", "Male urinating.mp3", false);
     }
 
-    private void setMode(boolean modeMark, Button button, String text, String color, String audioFile, boolean loopAudio) {
-        this.modeMark = modeMark;
+    private void setMode(Button button, String text, String color, String audioFile, boolean loopAudio) {
         button.setText(text);
         button.setAlpha(1.0f);
         button.getBackground().setColorFilter(Color.parseColor(color), PorterDuff.Mode.MULTIPLY);
@@ -375,6 +379,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void applyAction(long delay) {
+        DrinkingDAO.sendDrinking(this, getApplicationContext(), ServerId.getServerId(), currentTerritory.getId(), delay);
+    }
 
+    @Override
+    public void onSendDrinking(Drinking drinking) {
+        String drinkingText = String.valueOf(drinking.getAmount());
+
+        Context context = getApplicationContext();
+        CharSequence text = "You drinked for " + drinkingText.substring(0, Math.min(5, drinkingText.length())) + " ml.";
+        int duration = Toast.LENGTH_SHORT;
+
+        Toast toast = Toast.makeText(context, text, duration);
+        toast.show();
+    }
+
+    @Override
+    public void errorOnSendDrinking(VolleyError error) {
+        Log.e("errorOnSendDrinking", Server.toString(error));
     }
 }

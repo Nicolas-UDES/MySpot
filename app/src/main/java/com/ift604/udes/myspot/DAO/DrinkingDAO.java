@@ -34,7 +34,7 @@ public class DrinkingDAO {
         void errorOnSendDrinking(VolleyError error);
     }
 
-    public static void getNonEmptyDrinkings(final DrinkingDAO.OnGetNonEmptyDrinkings answer, Context context, int playerId) {
+    public static void getNonEmptyDrinkings(final DrinkingDAO.OnGetNonEmptyDrinkings answer, Context context, long playerId) {
         final String path = Server.URL + PATH + "getNonEmpty/" + playerId;
 
         StringRequest stringRequest = new StringRequest(Request.Method.GET, path, new Response.Listener<String>() {
@@ -62,10 +62,10 @@ public class DrinkingDAO {
         Server.getInstance(context).addToRequestQueue(stringRequest);
     }
 
-    public static void sendDrinking(final DrinkingDAO.OnSendDrinking answer, Context context, int playerId, int territoryId, int amount) {
-        final String path = Server.URL + PATH + "getNonEmpty/" + playerId + "/" + territoryId + "/" + amount;
+    public static void sendDrinking(final DrinkingDAO.OnSendDrinking answer, Context context, long playerId, long territoryId, long delay) {
+        final String path = Server.URL + PATH + "drinkInTerritory/" + playerId + "/" + territoryId + "/" + delay;
 
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, path, new Response.Listener<String>() {
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, path, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 // Result handling
