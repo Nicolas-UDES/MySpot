@@ -30,6 +30,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.*;
 import com.ift604.udes.myspot.DAO.DrinkingDAO;
+import com.ift604.udes.myspot.DAO.MarkingDAO;
 import com.ift604.udes.myspot.DAO.PlayerDAO;
 import com.ift604.udes.myspot.DAO.Server;
 import com.ift604.udes.myspot.DAO.TerritoryDAO;
@@ -379,7 +380,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void applyAction(long delay) {
-        DrinkingDAO.sendDrinking(this, getApplicationContext(), ServerId.getServerId(), currentTerritory.getId(), delay);
+        if(currentTerritory.setTerritoryType == 0){
+            DrinkingDAO.sendDrinking(this, getApplicationContext(), ServerId.getServerId(), currentTerritory.getId(), delay);
+        }else{
+            MarkingDAO.sendMarking(this, getApplicationContext(), ServerId.getServerId(), currentTerritory.getId(), delay);
+        }
     }
 
     @Override
