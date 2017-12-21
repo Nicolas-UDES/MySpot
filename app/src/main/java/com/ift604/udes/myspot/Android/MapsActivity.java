@@ -49,7 +49,7 @@ import MySpotLibrary.Entites.Enumerable.TerritoryType;
 
 import static MySpotLibrary.BLL.GeoPosBLL.isPointInPolygon;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener, View.OnTouchListener, TerritoryDAO.OnGetTerritories, PlayerDAO.OnCreatePlayer, DrinkingDAO.OnSendDrinking {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener, View.OnTouchListener, TerritoryDAO.OnGetTerritories, PlayerDAO.OnCreatePlayer, DrinkingDAO.OnSendDrinking, MarkingDAO.OnSendMarking {
 
     private static final int MY_LOCATION_REQUEST_CODE = 245;
     private static final String SAVED_TERRITORIES_KEY = "SAVED_TERRITORIES";
@@ -380,7 +380,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void applyAction(long delay) {
-        if(currentTerritory.setTerritoryType == 0){
+        if(currentTerritory.getTerritoryType() == TerritoryType.Water){
             DrinkingDAO.sendDrinking(this, getApplicationContext(), ServerId.getServerId(), currentTerritory.getId(), delay);
         }else{
             MarkingDAO.sendMarking(this, getApplicationContext(), ServerId.getServerId(), currentTerritory.getId(), delay);
@@ -402,5 +402,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void errorOnSendDrinking(VolleyError error) {
         Log.e("errorOnSendDrinking", Server.toString(error));
+    }
+
+    @Override
+    public void onSendMarking(Marking marking) {
+
+    }
+
+    @Override
+    public void errorOnSendMarking(VolleyError error) {
+
     }
 }
