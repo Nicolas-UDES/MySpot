@@ -39,7 +39,7 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-core:2.9.2'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.9.2'
     compile 'com.fasterxml.jackson.core:jackson-annotations:2.9.2'
-    implementation files('data/MySpotLibrary-1.0-shaded.jar')
+    implementation files('data/MySpotLibrary-1.0.jar')
 }
 
 apply plugin: 'com.google.gms.google-services'
