@@ -102,6 +102,12 @@ public class MeActivity extends Activity implements PlayerDAO.OnGetPlayer, Drink
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        timer.cancel();
+    }
+
+    @Override
     public void errorOnGetNonEmptyDrinkings(VolleyError error) {
         Log.e("errorOnGetNonEmptyDrinkings", Server.toString(error));
     }
