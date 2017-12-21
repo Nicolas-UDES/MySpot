@@ -12,6 +12,8 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -42,6 +44,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import MySpotLibrary.BLL.PlayerBLL;
 import MySpotLibrary.Entites.*;
@@ -62,6 +66,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Location firstPosition;
     private Territory currentTerritory;
     private long actionBegining;
+    private Timer timer;
 
     private GoogleMap myMap;
     private MediaPlayer player;
@@ -80,6 +85,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         ServerId.clearServerId();
         getServerId();
         setButtons();
+
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        TerritoryDAO.getTerritories(MapsActivity.this, getApplicationContext());
+                    }
+                });
+            }
+        }, 1000, 1000);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -160,6 +178,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onPause() {
         super.onPause();
         locationManager.removeUpdates(this);
+        if(timer != null) {
+            timer.cancel();
+        }
     }
 
     public void loadDataFromAsset(String file, boolean loop) {
@@ -304,8 +325,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onGetTerritories(List<Territory> territories) {
+        if(territories != null) {
+            myMap.clear();
+        }
+
         this.territories = new HashMap<>();
-        for(Territory territory : territories){
+        for (Territory territory : territories) {
             PolygonOptions polygon = getPolygonOptions(territory);
             myMap.addPolygon(polygon);
             this.territories.put(territory, polygon);
