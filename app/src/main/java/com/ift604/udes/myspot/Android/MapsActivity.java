@@ -243,7 +243,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         polygonOptions.addAll(getGooglePositions(territory.getPositions()));
         polygonOptions.strokeColor(Color.BLACK);
         polygonOptions.strokeWidth(5.0f);
-        polygonOptions.fillColor(getColor(territory.getTerritoryType()));
+        polygonOptions.fillColor(getColor(territory));
 
         return polygonOptions;
     }
@@ -258,6 +258,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             default:
                 return Color.argb(alpha, 200, 0, 0);
         }
+    }
+
+    private int getColor(Territory territory){
+        final int alpha = 30;
+        long id = territory.getOwnedById();
+        return Color.argb(alpha,(int) id%11,(int) id%15,(int )id%25);
+
     }
 
     public void meButtonClick(View view) {
