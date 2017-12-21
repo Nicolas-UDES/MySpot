@@ -243,18 +243,50 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         polygonOptions.addAll(getGooglePositions(territory.getPositions()));
         polygonOptions.strokeColor(Color.BLACK);
         polygonOptions.strokeWidth(5.0f);
-        polygonOptions.fillColor(getColor(territory.getTerritoryType()));
+        polygonOptions.fillColor(getColor(territory));
 
         return polygonOptions;
     }
 
-    private int getColor(TerritoryType type){
+    private int getColor(Territory territory){
+        TerritoryType type = territory.getTerritoryType();
+        Integer idHash = null;
+        if (territory.getOwnedById() != null) {
+            idHash = territory.getOwnedById().intValue() % 10;
+        }
         final int alpha = 30;
         switch (type){
             case Water:
                 return Color.argb(alpha, 0, 0, 200);
             case Gainable:
-                return Color.argb(alpha, 0, 200, 0);
+                if (idHash != null) {
+                    switch(idHash) {
+                        case 0:
+                            return Color.argb(alpha, 200, 0, 200);
+                        case 1:
+                            return Color.argb(alpha, 200, 123, 200);
+                        case 2:
+                            return Color.argb(alpha, 20, 70, 20);
+                        case 3:
+                            return Color.argb(alpha, 200, 90, 0);
+                        case 4:
+                            return Color.argb(alpha, 200, 0, 0);
+                        case 5:
+                            return Color.argb(alpha, 0, 20, 200);
+                        case 6:
+                            return Color.argb(alpha, 99, 0, 99);
+                        case 7:
+                            return Color.argb(alpha, 20, 99, 200);
+                        case 8:
+                            return Color.argb(alpha, 20, 40, 60);
+                        case 9:
+                            return Color.argb(alpha, 60, 80, 200);
+                        default:
+                            return Color.argb(alpha, 200, 0, 0);
+                    }
+                } else {
+                    return Color.argb(alpha, 0, 200, 0);
+                }
             default:
                 return Color.argb(alpha, 200, 0, 0);
         }
@@ -310,23 +342,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         if(location != null) {
             GeoPos latLng = new GeoPos(location.getLatitude(), location.getLongitude());
-
-            for (Territory territory : territories.keySet()) {
-                if (!isPointInPolygon(latLng, territory.getPositions())) {
-                    continue;
-                }
-
-                found = true;
-                if (territory.getTerritoryType() == TerritoryType.Water) {
-                    if (currentTerritory == null || currentTerritory.getTerritoryType() == TerritoryType.Gainable) {
-                        setModeDrink(markButton);
+            if (territories != null) {
+                for (Territory territory : territories.keySet()) {
+                    if (!isPointInPolygon(latLng, territory.getPositions())) {
+                        continue;
                     }
-                } else if (currentTerritory == null || currentTerritory.getTerritoryType() == TerritoryType.Water) {
-                    setModeMark(markButton);
-                }
 
-                currentTerritory = territory;
-                break;
+                    found = true;
+                    if (territory.getTerritoryType() == TerritoryType.Water) {
+                        if (currentTerritory == null || currentTerritory.getTerritoryType() == TerritoryType.Gainable) {
+                            setModeDrink(markButton);
+                        }
+                    } else if (currentTerritory == null || currentTerritory.getTerritoryType() == TerritoryType.Water) {
+                        setModeMark(markButton);
+                    }
+
+                    currentTerritory = territory;
+                    break;
+                }
             }
         }
 
