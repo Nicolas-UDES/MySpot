@@ -406,11 +406,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onSendMarking(Marking marking) {
+        String drinkingText = String.valueOf(marking.getAmount());
 
+        Context context = getApplicationContext();
+        CharSequence text = "You marked for " + drinkingText.substring(0, Math.min(5, drinkingText.length())) + " ml.";
+        int duration = Toast.LENGTH_SHORT;
+
+        Toast toast = Toast.makeText(context, text, duration);
+        toast.show();
     }
 
     @Override
     public void errorOnSendMarking(VolleyError error) {
-
+        Log.e("errorOnSendMarking", Server.toString(error));
     }
 }
