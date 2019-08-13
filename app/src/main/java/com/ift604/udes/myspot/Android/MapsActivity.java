@@ -313,6 +313,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    private int getColor(Territory territory){
+        final int alpha = 30;
+        long id = territory.getOwnedById();
+        return Color.argb(alpha,(int) id%11,(int) id%15,(int )id%25);
+
+    }
+
     public void meButtonClick(View view) {
         Intent intent = new Intent(this, MeActivity.class);
         startActivity(intent);
